@@ -1,0 +1,221 @@
+<UserControl x:Class="WPF_SP.Views.ProductoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WPF_SP.ViewModels"
+             Background="{StaticResource FondoPrincipal}">
+
+    <UserControl.DataContext>
+        <vm:ProductoViewModel />
+    </UserControl.DataContext>
+
+    <Grid Margin="24">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="18"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+
+        <!-- ENCABEZADO -->
+        <Border Grid.Row="0"
+                Background="#8B82C7"
+                CornerRadius="14"
+                Padding="24,18">
+
+            <StackPanel>
+
+                <TextBlock Text="Gestión de Productos"
+                           FontSize="25"
+                           FontWeight="SemiBold"
+                           Foreground="White"/>
+
+                <TextBlock Text="Administra productos, precios y existencias"
+                           FontSize="13"
+                           Foreground="#F2F0FC"
+                           Margin="0,5,0,0"/>
+
+            </StackPanel>
+
+        </Border>
+
+
+        <!-- CONTENIDO -->
+        <Grid Grid.Row="2">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="18"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+
+            <!-- TABLA -->
+            <Border Grid.Column="0"
+                    Background="White"
+                    CornerRadius="14"
+                    BorderBrush="#E2DFF2"
+                    BorderThickness="1">
+
+                <DataGrid ItemsSource="{Binding Productos}"
+                          SelectedItem="{Binding Seleccionado, Mode=TwoWay}">
+
+                    <DataGrid.Columns>
+
+                        <DataGridTextColumn Header="ID"
+                                            Binding="{Binding ProductoID}"
+                                            Width="50"/>
+
+                        <DataGridTextColumn Header="Nombre"
+                                            Binding="{Binding NombreProducto}"
+                                            Width="*"/>
+
+                        <DataGridTextColumn Header="Precio"
+                                            Binding="{Binding PrecioUnidad, StringFormat=C}"
+                                            Width="90"/>
+
+                        <DataGridTextColumn Header="Stock"
+                                            Binding="{Binding UnidadesEnExistencia}"
+                                            Width="70"/>
+
+                        <DataGridTextColumn Header="Reorden"
+                                            Binding="{Binding NivelDeReorden}"
+                                            Width="70"/>
+
+                        <DataGridCheckBoxColumn Header="Descont."
+                                                  Binding="{Binding Descontinuado}"
+                                                  Width="70"/>
+
+                    </DataGrid.Columns>
+
+                </DataGrid>
+
+            </Border>
+
+
+            <!-- FORMULARIO -->
+            <Border Grid.Column="2"
+                    Background="White"
+                    CornerRadius="14"
+                    BorderBrush="#E2DFF2"
+                    BorderThickness="1"
+                    Padding="22">
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+
+                    <StackPanel>
+
+                        <TextBlock Text="Mantenimiento de Productos"
+                                   FontWeight="SemiBold"
+                                   FontSize="19"
+                                   Foreground="#303653"
+                                   Margin="0,0,0,20"/>
+
+
+                        <TextBlock Text="Nombre"
+                                   FontWeight="SemiBold"
+                                   Foreground="#69648C"/>
+
+                        <TextBox Text="{Binding Actual.NombreProducto, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,6,0,11"
+                                 Padding="10,8"/>
+
+
+                        <TextBlock Text="Proveedor ID"
+                                   FontWeight="SemiBold"
+                                   Foreground="#69648C"/>
+
+                        <TextBox Text="{Binding Actual.ProveedorID, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,6,0,11"
+                                 Padding="10,8"/>
+
+
+                        <TextBlock Text="Categoría ID"
+                                   FontWeight="SemiBold"
+                                   Foreground="#69648C"/>
+
+                        <TextBox Text="{Binding Actual.CategoriaID, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,6,0,11"
+                                 Padding="10,8"/>
+
+
+                        <TextBlock Text="Cantidad por Unidad"
+                                   FontWeight="SemiBold"
+                                   Foreground="#69648C"/>
+
+                        <TextBox Text="{Binding Actual.CantidadPorUnidad, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,6,0,11"
+                                 Padding="10,8"/>
+
+
+                        <TextBlock Text="Precio Unitario"
+                                   FontWeight="SemiBold"
+                                   Foreground="#69648C"/>
+
+                        <TextBox Text="{Binding Actual.PrecioUnidad, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,6,0,11"
+                                 Padding="10,8"/>
+
+
+                        <TextBlock Text="Unidades en Existencia"
+                                   FontWeight="SemiBold"
+                                   Foreground="#69648C"/>
+
+                        <TextBox Text="{Binding Actual.UnidadesEnExistencia, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,6,0,11"
+                                 Padding="10,8"/>
+
+
+                        <TextBlock Text="Unidades en Pedido"
+                                   FontWeight="SemiBold"
+                                   Foreground="#69648C"/>
+
+                        <TextBox Text="{Binding Actual.UnidadesEnPedido, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,6,0,11"
+                                 Padding="10,8"/>
+
+
+                        <TextBlock Text="Nivel de Reorden"
+                                   FontWeight="SemiBold"
+                                   Foreground="#69648C"/>
+
+                        <TextBox Text="{Binding Actual.NivelDeReorden, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,6,0,11"
+                                 Padding="10,8"/>
+
+
+                        <CheckBox Content="Descontinuado"
+                                  IsChecked="{Binding Actual.Descontinuado}"
+                                  Margin="0,3,0,16"/>
+
+
+                        <StackPanel Orientation="Horizontal">
+
+                            <Button Content="Nuevo"
+                                    Command="{Binding NuevoCommand}"
+                                    Style="{StaticResource BotonAccion}"
+                                    Background="#A9A1D8"/>
+
+                            <Button Content="Guardar"
+                                    Command="{Binding GuardarCommand}"
+                                    Style="{StaticResource BotonAccion}"
+                                    Background="#8178C0"/>
+
+                            <Button Content="Eliminar"
+                                    Command="{Binding EliminarCommand}"
+                                    Style="{StaticResource BotonAccion}"
+                                    Background="#C96B7B"/>
+
+                        </StackPanel>
+
+                    </StackPanel>
+
+                </ScrollViewer>
+
+            </Border>
+
+        </Grid>
+
+    </Grid>
+
+</UserControl>
