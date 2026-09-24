@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
-using WPF_SP.Data;
-using WPF_SP.Models;
+using WPF_SP.Data.Models;
+using WPF_SP.Data.Repository;
 
 namespace WPF_SP.ViewModels
 {
@@ -43,26 +43,37 @@ namespace WPF_SP.ViewModels
             }
         }
 
-        public RelayCommand CargarCommand { get; }
+        public AsyncRelayCommand CargarCommand { get; }
         public RelayCommand NuevoCommand { get; }
-        public RelayCommand GuardarCommand { get; }
-        public RelayCommand EliminarCommand { get; }
+        public AsyncRelayCommand GuardarCommand { get; }
+        public AsyncRelayCommand EliminarCommand { get; }
 
         public ProductoViewModel()
         {
-            CargarCommand = new RelayCommand(_ => Cargar());
+            CargarCommand = new AsyncRelayCommand(_ => CargarAsync());
             NuevoCommand = new RelayCommand(_ => Nuevo());
-            GuardarCommand = new RelayCommand(_ => Guardar());
-            EliminarCommand = new RelayCommand(_ => Eliminar(), _ => Seleccionado is not null);
+            GuardarCommand = new AsyncRelayCommand(_ => GuardarAsync());
+            EliminarCommand = new AsyncRelayCommand(_ => EliminarAsync(), _ => Seleccionado is not null);
 
-            Cargar();
+            // OJO: aquí YA NO se llama a CargarAsync().
+            // Un constructor no puede ser async, así que la carga inicial
+            // se dispara desde el evento Loaded de la Vista (ver ProductoView.xaml.cs).
         }
 
-        private void Cargar()
+        public async Task CargarAsync()
         {
-            Productos.Clear();
-            foreach (var p in _repo.ListarTodos())
-                Productos.Add(p);
+            try
+            {
+                var datos = await _repo.ListarTodosAsync();
+                Productos.Clear();
+                foreach (var p in datos)
+                    Productos.Add(p);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo conectar a la base de datos:\n{ex.Message}",
+                    "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Nuevo()
@@ -71,7 +82,7 @@ namespace WPF_SP.ViewModels
             Actual = new Producto();
         }
 
-        private void Guardar()
+        private async Task GuardarAsync()
         {
             try
             {
@@ -82,11 +93,11 @@ namespace WPF_SP.ViewModels
                 }
 
                 if (Actual.ProductoID == 0)
-                    _repo.Insertar(Actual);
+                    await _repo.InsertarAsync(Actual);
                 else
-                    _repo.Actualizar(Actual);
+                    await _repo.ActualizarAsync(Actual);
 
-                Cargar();
+                await CargarAsync();
                 Nuevo();
             }
             catch (Exception ex)
@@ -95,7 +106,7 @@ namespace WPF_SP.ViewModels
             }
         }
 
-        private void Eliminar()
+        private async Task EliminarAsync()
         {
             if (Seleccionado is null) return;
 
@@ -105,8 +116,8 @@ namespace WPF_SP.ViewModels
 
             try
             {
-                _repo.Eliminar(Seleccionado.ProductoID);
-                Cargar();
+                await _repo.EliminarAsync(Seleccionado.ProductoID);
+                await CargarAsync();
                 Nuevo();
             }
             catch (Exception ex)

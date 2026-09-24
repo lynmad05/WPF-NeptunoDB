@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
-using WPF_SP.Data;
-using WPF_SP.Models;
+using WPF_SP.Data.Models;
+using WPF_SP.Data.Repository;
 
 namespace WPF_SP.ViewModels
 {
@@ -47,46 +47,39 @@ namespace WPF_SP.ViewModels
             }
         }
 
-        public DateTime FechaInicioReporte
-        {
-            get => _fechaInicioReporte;
-            set => SetProperty(ref _fechaInicioReporte, value);
-        }
+        public DateTime FechaInicioReporte { get => _fechaInicioReporte; set => SetProperty(ref _fechaInicioReporte, value); }
+        public DateTime FechaFinReporte { get => _fechaFinReporte; set => SetProperty(ref _fechaFinReporte, value); }
+        public decimal TotalReporte { get => _totalReporte; private set => SetProperty(ref _totalReporte, value); }
 
-        public DateTime FechaFinReporte
-        {
-            get => _fechaFinReporte;
-            set => SetProperty(ref _fechaFinReporte, value);
-        }
-
-        public decimal TotalReporte
-        {
-            get => _totalReporte;
-            private set => SetProperty(ref _totalReporte, value);
-        }
-
-        public RelayCommand CargarCommand { get; }
+        public AsyncRelayCommand CargarCommand { get; }
         public RelayCommand NuevoCommand { get; }
-        public RelayCommand GuardarCommand { get; }
-        public RelayCommand EliminarCommand { get; }
-        public RelayCommand GenerarReporteCommand { get; }
+        public AsyncRelayCommand GuardarCommand { get; }
+        public AsyncRelayCommand EliminarCommand { get; }
+        public AsyncRelayCommand GenerarReporteCommand { get; }
 
         public PedidoViewModel()
         {
-            CargarCommand = new RelayCommand(_ => Cargar());
+            CargarCommand = new AsyncRelayCommand(_ => CargarAsync());
             NuevoCommand = new RelayCommand(_ => Nuevo());
-            GuardarCommand = new RelayCommand(_ => Guardar());
-            EliminarCommand = new RelayCommand(_ => Eliminar(), _ => Seleccionado is not null);
-            GenerarReporteCommand = new RelayCommand(_ => GenerarReporte());
-
-            Cargar();
+            GuardarCommand = new AsyncRelayCommand(_ => GuardarAsync());
+            EliminarCommand = new AsyncRelayCommand(_ => EliminarAsync(), _ => Seleccionado is not null);
+            GenerarReporteCommand = new AsyncRelayCommand(_ => GenerarReporteAsync());
         }
 
-        private void Cargar()
+        public async Task CargarAsync()
         {
-            Pedidos.Clear();
-            foreach (var p in _repo.ListarTodos())
-                Pedidos.Add(p);
+            try
+            {
+                var datos = await _repo.ListarTodosAsync();
+                Pedidos.Clear();
+                foreach (var p in datos)
+                    Pedidos.Add(p);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo conectar a la base de datos:\n{ex.Message}",
+                    "Error de conexión", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Nuevo()
@@ -95,16 +88,16 @@ namespace WPF_SP.ViewModels
             Actual = new Pedido();
         }
 
-        private void Guardar()
+        private async Task GuardarAsync()
         {
             try
             {
                 if (Actual.PedidoID == 0)
-                    _repo.Insertar(Actual);
+                    await _repo.InsertarAsync(Actual);
                 else
-                    _repo.Actualizar(Actual);
+                    await _repo.ActualizarAsync(Actual);
 
-                Cargar();
+                await CargarAsync();
                 Nuevo();
             }
             catch (Exception ex)
@@ -113,7 +106,7 @@ namespace WPF_SP.ViewModels
             }
         }
 
-        private void Eliminar()
+        private async Task EliminarAsync()
         {
             if (Seleccionado is null) return;
 
@@ -123,8 +116,8 @@ namespace WPF_SP.ViewModels
 
             try
             {
-                _repo.Eliminar(Seleccionado.PedidoID);
-                Cargar();
+                await _repo.EliminarAsync(Seleccionado.PedidoID);
+                await CargarAsync();
                 Nuevo();
             }
             catch (Exception ex)
@@ -133,7 +126,7 @@ namespace WPF_SP.ViewModels
             }
         }
 
-        private void GenerarReporte()
+        private async Task GenerarReporteAsync()
         {
             try
             {
@@ -143,8 +136,9 @@ namespace WPF_SP.ViewModels
                     return;
                 }
 
+                var resultados = await _repo.ListarDetallePorRangoFechasAsync(FechaInicioReporte, FechaFinReporte);
+
                 ReporteDetalle.Clear();
-                var resultados = _repo.ListarDetallePorRangoFechas(FechaInicioReporte, FechaFinReporte);
                 foreach (var fila in resultados)
                     ReporteDetalle.Add(fila);
 
